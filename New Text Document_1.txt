@@ -1,0 +1,254 @@
+source="Sample_tickets.csv" host="ip-172-31-85-55" index="rc_idx" sourcetype="csv" | stats count as total by asset_id, severity | rename asset_id as asset
+
+index="_internal" | stats sum(bytes) as bytes by sourcetype| fillnull value=NA
+index="_internal" | stats avg(bytes) as bytes by sourcetype| fillnull value="NA"
+
+dex="_internal" | stats values(source) as source by sourcetype
+
+index="_internal" | stats values(source) as source by sourcetype
+
+index="_internal" 
+| eval kb = bytes/1024 
+| table kb, bytes 
+| eval kb_round = round(kb,3) 
+| eval kb_count= kb_roung." KB"
+
+index=rc_idx 
+| dedup current_ticket_state 
+| eval status = if (current_ticket_state="Closed" OR current_ticket_state="Resolved", "Complete", "incomplete") 
+| table status, current_ticket_state
+
+index=rc_idx | dedup current_ticket_state 
+| eval status = if (current_ticket_state in( "Closed" ,"Resolved"), "Complete", "incomplete") 
+| table status, current_ticket_state
+
+case
+index=rc_idx 
+| dedup severity
+ | table severity 
+| eval status = case(severity=1, "Critical", severity=2,"high", severity=3, "Normal", 1=1, "Low")
+
+sort Asc
+index=rc_idx | dedup severity | table severity | eval status = case(severity=1, "Critical", severity=2,"high", severity=3, "Normal", 1=1, "Low") | sort severity 
+
+sort desc
+index=rc_idx | dedup severity | table severity | eval status = case(severity=1, "Critical", severity=2,"high", severity=3, "Normal", 1=1, "Low") | sort -severity 
+
+top
+index=_internal | top limit=10 sourcetype
+index=_internal | top limit=0 sourcetype -- all rows
+index=_internal | top limit=10 sourcetype | fields - percent
+
+
+chart
+index=rc_idx | chart count by current_ticket_state, severity
+visulazation-> format->
+
+timechat
+index=rc_idx | timechart span=1mon count by current_ticket_state
+1mon = 1 month
+1y = 1 year
+D = Day
+
+
+index=_internal | timechart count
+
+
+index="vk_idx" sourcetype="vk_txt" | rex field=_raw "From:\s+<(?P<from_id>.*)>\s+To"
+
+
+https://www.debuggex.com/cheatsheet/regex/pcre
+
+https://regex101.com/
+
+
+
+index="vk_idx" sourcetype="vk_txt" | rex field=_raw "From:\s+<(?P<from_id>.*)>\s+To:\s+<(?P<to_id>.*)>" | table from_id, to_id
+
+
+source="data.txt" host="text" index="rc_idx" sourcetype="rc_txt" 
+| rex field=_raw "From:\s+<(?P<from_id>.*)>\s+To" | table from_id, _raw
+
+index="vk_idx" sourcetype="vk_txt" | rex field=_raw "From:\s+<(?P<from_id>.*)>\s+To:\s+<(?P<to_id>.*)>" | table from_id, to_id
+
+
+|makeresults | eval text = "vk;search;savedsearch" | rex field=text "(?P<username>\w+);(?P<app_name>\w+);(?P<savedsearch_name>\w+)"
+
+|makeresults | eval credit_card_number = "1234-5678-9101-1213" | rex field=credit_card_number "(?P<part1>\d{4})" max_match=0
+
+index=rc_idx | stats count by current_ticket_state | addcoltotals label=sum labelfield=current_ticket_state
+
+index=rc_idx | chart count by current_ticket_state, asset_id | addcoltotals label=sum labelfield=current_ticket_state | addtotals fieldname=row_total
+
+index=rc_idx | stats count by source
+
+index IN (rc_idx) | stats count by current_ticket_state | eval threshold=17 | where threshold>count
+
+index IN (rc_idx) | stats count by current_ticket_state | eval threshold=17 | search count>10
+
+index=vk_idx | stats count by current_ticket_state | eval threshold=17 | search count>10 AND count<17
+
+| eventcount index=_* OR index=* summarize=false
+
+inner join
+index=rc_idx  source="Sample_tickets.csv" 
+|table ticket_number, application_name, asset_id
+| join type=inner ticket_number
+[search index=rc_idx source=Sample_lookup.csv
+|table ticket_number, time_taken]
+
+index=rc_idx  source="Sample_tickets.csv" 
+|table ticket_number, application_name, asset_id
+| join type=inner ticket_number
+[search index=rc_idx source=Sample_lookup.csv time_taken="9hrs"
+|table ticket_number, time_taken]
+
+outer join
+index=rc_idx  source="Sample_tickets.csv" 
+|table ticket_number, application_name, asset_id
+| join type=outer ticket_number
+[search index=rc_idx source=Sample_lookup.csv
+|table ticket_number, time_taken]
+
+index=rc_idx  source="Sample_tickets.csv" 
+|table ticket_number, application_name, asset_id
+| join type=outer ticket_number
+[search index=rc_idx source=Sample_lookup.csv time_taken="9hrs"
+|table ticket_number, time_taken]
+
+
+ `no_arg`
+
+
+`multi_arg(2, "In Progress")`
+index=rc_idx source=Sample_tickets.csv current_ticket_state="$state$"  severity=$sev$ | stats count by severity, current_ticket_state
+sev,state
+
+
+lookup up
+index=rc_idx  source=Sample_tickets.csv
+|table ticket_number, severity, current_ticket_state
+| lookup rc_sample_lookup.csv ticket_number OUTPUT time_taken as time_consumed
+
+
+---from vivek
+Git Hub Link ---> https://github.com/vivek9325/SPLK_BOA_07_07_2025.git
+
+Pre Assessment:  https://forms.cloud.microsoft/r/C3uujUZbsn
+
+
+
+https://palmetosolutions.webex.com/palmetosolutions/j.php?MTID=mc67aa7b2668ed3028c69e8de8ae8c000
+
+
+index="vk_idx" sourcetype="vk_txt" | rex field=_raw "From:\s+<(?P<from_id>.*)>\s+To"
+
+
+https://www.debuggex.com/cheatsheet/regex/pcre
+
+https://regex101.com/
+
+
+index="vk_idx" sourcetype="vk_txt" | rex field=_raw "To:\s+<(?P<to_id>.*)>"
+
+To:\s+.*<(?P<to_id>).*>
+
+
+index="vk_idx" sourcetype="vk_txt" | rex field=_raw "From:\s+<(?P<from_id>.*)>\s+To:\s+<(?P<to_id>.*)>" | table from_id, to_id
+
+
+
+|makeresults | eval text = "vk;search;savedsearch"
+   
+
+|makeresults | eval credit_card_number = "1234-5678-9101-1213"
+
+
+|makeresults | eval credit_card_number = "1234-5678-9101-1213" | rex field=credit_card_number "(?P<digit>\d{4})" max_match=0
+
+
+
+index=vk_idx | stats count by current_ticket_state | eval threshold=17 | search count>10 AND count<17
+
+
+
+| eventcount index=_* OR index=* summarize=false
+
+
+index=vk_idx source=Sample_tickets.csv 
+| table ticket_number, application_name, asset_id 
+| join type=inner ticket_number
+    [ search index=vk_idx source=Sample_lookup.csv 
+    | table ticket_number, time_taken]
+
+0 8-18 * * 1-5
+
+
+0 8-18 * * 1-5
+
+
+
+https://docs.splunk.com/Documentation
+
+
+https://community.splunk.com/
+
+
+
+  <search id="base_id">
+    
+    
+    <query>
+      
+      index=vk_idx source=sample_tickets.csv | stats count by severity, current_ticket_state
+      
+    </query>
+    
+    <earliest>0</earliest>
+    <latest>now</latest>
+    
+  </search>
+  
+
+ base_search2
+
+index=vk_idx source=sample_tickets.csv 
+|  stats count by asset_id, application_name
+
+.
+chain search ---
+
+| stats count by asset_id
+
+
+http://54.234.129.213:8000/en-US/app/launcher/home
+admin / admin@123
+
+SELECT * FROM `employee`.`emp_details`
+WHERE emp_id > ? ORDER BY emp_id ASC
+
+
+
+
+https://forms.cloud.microsoft/r/bLiMgYUcDz
+
+
+https://forms.cloud.microsoft/r/WYhvJiKxyL
+
+
+source="power_usage_2016_to_2020.csv"  index="main" sourcetype="csv"
+| timechart span=1mon avg("Value _kWh") as val
+| predict val algorithm=LL future_timespan=30
+
+
+source="power_usage_2016_to_2020.csv"  index="main" sourcetype="csv"
+| timechart span=1mon avg("Value _kWh") as val
+| predict val algorithm=LLT future_timespan=30
+
+
+source="power_usage_2016_to_2020.csv"  index="main" sourcetype="csv"
+| timechart span=1mon avg("Value _kWh") as val
+| predict val algorithm=LLP5 future_timespan=30
+
+
+
